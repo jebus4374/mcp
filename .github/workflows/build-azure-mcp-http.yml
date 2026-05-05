@@ -44,7 +44,7 @@ jobs:
       - name: Build and push MCP HTTP image
         run: |
           docker build -f servers/Azure.Mcp.Server/Dockerfile.http \
-            -t ${{ secrets.ACR_LOGIN_SERVER }}/azure-mcp-http:latest \
+            -t ${{ secrets.ACR_LOGIN_SERVER }}/azure-mcp-http:v1 \
             .
 
-          docker push ${{ secrets.ACR_LOGIN_SERVER }}/azure-mcp-http:latest
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/azure-mcp-http:v1
