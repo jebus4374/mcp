@@ -43,8 +43,9 @@ jobs:
       # 6. Build and push Docker image
       - name: Build and push MCP HTTP image
         run: |
-          docker build -f servers/Azure.Mcp.Server/Dockerfile \
+          docker build -f Dockerfile \
             --build-arg PUBLISH_DIR=out/publish \
+            --build-arg EXECUTABLE_NAME=Azure.Mcp.Server \
             -t ${{ secrets.ACR_LOGIN_SERVER }}/azure-mcp-http:latest \
             .
 
