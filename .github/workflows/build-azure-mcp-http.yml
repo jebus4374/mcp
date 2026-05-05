@@ -1,0 +1,54 @@
+name: Build Azure MCP HTTP Server
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout source
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # 2. Install .NET 10 SDK
+      - name: Setup .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # 3. Publish ONLY the HTTP MCP Server (no solution, no tests)
+      - name: Publish Azure MCP Server
+        run: |
+          dotnet publish servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj \
+            -c Release \
+            -o out/publish \
+            /p:RestoreIgnoreFailedSources=true \
+            /p:BuildProjectReferences=true
+
+      # 4. Login to Azure (service principal)
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+      # 5. Login to ACR
+      - name: Docker login to ACR
+        run: |
+          az acr login --name aesgmcpacr
+
+      # 6. Build and push Docker image
+      - name: Build and push MCP HTTP image
+        run: |
+          docker build \
+            -f servers/Azure.Mcp.Server/Dockerfile \
+            --build-arg PUBLISH_DIR=out/publish \
+            -t ${{ secrets.ACR_LOGIN_SERVER }}/azure-mcp-http:latest \
+            .
+
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/azure-mcp-http:latest
